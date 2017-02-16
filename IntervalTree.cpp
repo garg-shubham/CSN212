@@ -3,11 +3,13 @@ using namespace std;
 #define F first
 #define S second
 #define MP make_pair
+
 typedef pair<int,int> Interval;
+
 
 struct node
 {
-	int low,high,MAX;
+	int low,high,MAX;		// lower bound, upper bound and max of subtree
 	node *left_child , *right_child;
 };
 
@@ -15,7 +17,7 @@ node *first, *temp ;
 
 node * insert(node* root,Interval i)
 {
-	// Base Case
+	// If sub tree is empty
 	if(root == NULL)
 	{
 		root = new node();
@@ -24,6 +26,9 @@ node * insert(node* root,Interval i)
 		root -> left_child = NULL;
 		root -> right_child = NULL;
 	}
+	//
+
+	//inserting with lower bound of interval as key for BST
 	else if(i.F < root-> low)
 	{
 		root -> left_child = insert(root -> left_child,i);
@@ -32,8 +37,12 @@ node * insert(node* root,Interval i)
 	{
 		root -> right_child = insert(root -> right_child , i);
 	}
+	//
+
+	// Updating Max Value
 	if(root -> MAX < i.S)
 		root -> MAX = i.S;
+	//
 
 	return root;
 }
@@ -48,18 +57,23 @@ bool OverlapCheck(int x,int y, Interval i)
 
 void SearchInterval(node *root,Interval i)
 {
+	// If subtree is empty i.e. whole tree has been searched
 	if(root == NULL)
 	{
 		cout<<"Interval Overlap not found\n";
 		return;
 	}
+	//
 
+	// Checking if Overlap is found at root node
 	if (OverlapCheck(root ->low , root -> high, i))
 	{
 		cout<<"Overlap found at ["<<root -> low<<","<<root -> high<<"]\n";
 		return;
 	}
+	//
 
+	//else find which subtree to travrerse next
 	if (root -> left_child != NULL)
 	{
 		if(root -> left_child -> MAX >= i.F)
@@ -76,11 +90,16 @@ void display(node *root)
 	if(root == NULL)
 		return;
 
+	//inorder traversal for display
+
 	display(root -> left_child);
-	cout<<"["<<root->low <<","<< root -> high <<"]\n";
+	cout<<"["<<root->low <<","<< root -> high <<"] Max:"<<root->MAX<<"\n";
 	display(root -> right_child);
+
+	//
 }
 
+//for finding left most node in a subtree
 node * LeftMostNode( node *root)
 {
 	node *temp2;
@@ -90,6 +109,7 @@ node * LeftMostNode( node *root)
 	return temp2;
 }
 
+// Needed to be done after deletion
 void Update_MAX_Value(node *root)
 {
 	if(root ==NULL)
@@ -98,6 +118,8 @@ void Update_MAX_Value(node *root)
 	Update_MAX_Value(root -> left_child);
 	Update_MAX_Value(root -> right_child);
 
+	// MAX is max(leftchild max, rightchild max, root high)
+	// writing max function on the basis of which of these three exist
 	if(root -> right_child !=NULL)
 	{
 		if(root -> left_child != NULL)
@@ -112,11 +134,13 @@ void Update_MAX_Value(node *root)
 		else
 			root -> MAX = root -> high;
 	}
+	//
 	return;
 }
 
 node * DeleteInterval(node *root ,Interval i)
 {
+	// if Interval does not exist in tree
 	if(root ==NULL)
 		return root;
 	
@@ -126,8 +150,10 @@ node * DeleteInterval(node *root ,Interval i)
 	else if (i.F > root -> low)
 		root -> right_child = DeleteInterval(root -> right_child , i);
 
+	// if all the above conditions are false so current node is the interval
 	else
 	{
+		// if only child exists
 		if( root -> left_child == NULL)
 		{
 			temp = root -> right_child;
@@ -141,6 +167,7 @@ node * DeleteInterval(node *root ,Interval i)
 			root = NULL;
 			return temp;
 		}
+		//
 
 		//else
 		temp = LeftMostNode(root -> right_child);
@@ -151,21 +178,25 @@ node * DeleteInterval(node *root ,Interval i)
 		Interval mp;
 		mp.F = temp -> low;
 		mp.S = temp -> high;
-		
+		//
+
 		root -> right_child = DeleteInterval(root -> right_child, mp);
 
+		// Updating MAX 
 		Update_MAX_Value(root);
+		//
+
 		return root;
 	}
 }
 
-/*
-{15, 20}, {10, 30}, {17, 19},{5, 20}, {12, 15}, {30, 40}
-*/
 int main()
 {
+	// initial conditon for tree
 	first =NULL;
-	
+	//
+	Interval p;
+ 
 	first = insert(first , MP(15,20));
 	first = insert(first , MP(10,30));
 	first = insert(first , MP(17,19));
@@ -175,7 +206,7 @@ int main()
 
 	display(first);
 	cout<<"Search interval (14,16)"<<"\n";
-	Interval p;
+	
 	p.F = 14;
 	p.S = 16;
 	SearchInterval(first , p);
